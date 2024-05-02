@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px; /* Limit the container width */
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .word-display {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .letter-box {
+            width: 40px;
+            height: 40px;
+            background-color: #ddd;
+            margin: 0 5px;
+            text-align: center;
+            line-height: 40px;
+            font-size: 20px;
+            border-radius: 5px;
+            color: #333; /* Letter color */
+        }
+
+        .input-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .guess-input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 70%; /* Adjust width as needed */
+            margin-right: 10px; /* Add some space between input and button */
+        }
+
+        .submit-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease; /* Add smooth transition */
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3; /* Darker color on hover */
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #007bff; /* Border style */
+            background-color: transparent; /* Transparent background */
+            color: #007bff; /* Text color */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: color 0.3s ease, border-color 0.3s ease; /* Add smooth transition */
+        }
+
+        .refresh-btn:hover {
+            color: #0056b3;
+            border-color: #0056b3;
+        }
+
+
+        .next-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #41b725;
+            background-color: transparent;
+            color: #007bff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .next-btn:hover {
+            color: #41b725;
+            border-color: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .guess-section {
+            margin-bottom: 20px;
+        }
+
+        .guess-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .feedback {
+            text-align: center;
+        }
+
+        .attempts {
+            margin-bottom: 5px;
+        }
+
+        .feedback-msg {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1 class="title">Wordle Level {{ level }}</h1>
+    {% for len_word in range(max) %}
+        <div class="word-display">
+            {% for max in range(length) %}
+                <div class="letter-box letter-box-{{ len_word }}">-</div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <div class="input-section">
+        <input type="text" class="guess-input" maxlength="{{ length }}" id="input-guess">
+        <button class="submit-btn" id="btn-submit">Submit</button>
+        <button class="refresh-btn" id="btn-refresh">Refresh</button>
+        <button class="next-btn hidden" id="btn-next">Next</button>
+    </div>
+    <div class="feedback">
+        <p class="attempts">Attempts left: {{ max - attempts }}</p>
+        <p class="feedback-msg"></p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const guessInput = document.querySelector('.guess-input');
+        const submitBtn = document.querySelector('.submit-btn');
+        const attemptsDisplay = document.querySelector('.attempts');
+        const feedbackMsg = document.querySelector('.feedback-msg');
+        const guessList = document.querySelector('.guess-list');
+        const refreshBtn = document.querySelector('.refresh-btn');
+        const nextBtn = document.querySelector('.next-btn');
+
+        refreshBtn.addEventListener('click', function () {
+            fetch('/wordle/restart', {
+                method: 'GET'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload()
+                    } else {
+                        throw new Error('Failed to restart game');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to restart game. Please try again later.');
+                });
+        });
+
+        nextBtn.addEventListener('click', function () {
+            fetch('/wordle/next', {
+                method: 'GET'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload()
+                    } else {
+                        throw new Error('Failed to next game');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to next game. Please try again later.');
+                });
+        });
+
+
+        if ({{ max }} === {{ attempts }}) {
+            document.getElementById('btn-submit').style.display = 'none';
+            document.getElementById('input-guess').style.display = 'none';
+            document.getElementById('btn-next').classList.remove('hidden')
+        }
+        if (!({{ attempts }} === 0))
+            fetch('/wordle/attempt', {
+                method: 'GET',
+            })
+                .then(response => response.json())
+                .then(data => {
+                        let attempts = data.attempts;
+                        let attempts_left = {{ max }} - attempts;
+                        attemptsDisplay.textContent = `Attempts left: ${attempts_left}`;
+                        let guesses = data.guesses;
+                        for (let i = 0; i < attempts; ++i) {
+                            updateLetterBoxes(guesses[i].guess, guesses[i].exist_indexes, guesses[i].correct_indexes, i + 1)
+                        }
+                    }
+                )
+
+        function updateLetterBoxes(guess, existIndexes, correctIndexes, attempt) {
+            const letterBoxes = document.querySelectorAll(`.letter-box-${(attempt - 1)}`);
+            for (let i = 0; i < guess.length; i++) {
+                console.log(guess)
+                letterBoxes[i].textContent = guess[i];
+                if (existIndexes.includes(i)) {
+                    letterBoxes[i].style.backgroundColor = 'yellow';
+                } else if (correctIndexes.includes(i)) {
+                    letterBoxes[i].style.backgroundColor = 'green';
+                } else {
+                    if (guess[i] !== '-') {
+                        letterBoxes[i].style.backgroundColor = 'red';
+                    }
+                }
+            }
+        }
+
+        function submitGuess() {
+            const guess = guessInput.value.toLowerCase();
+            guessInput.value = '';
+            if (guess.length !== {{ length }} || !/^[a-zA-Z]+$/.test(guess)) {
+                feedbackMsg.textContent = 'Invalid guess. Please enter a {{ length }}-letter word.';
+                return;
+            }
+
+            fetch('/wordle/attempt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    guess_word: guess
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    let attempts = data.attempts;
+                    attemptsDisplay.textContent = `Attempts: ${attempts}`;
+                    if (data.success) {
+                        updateLetterBoxes(guess, data.exist_indexes, data.correct_indexes, attempts);
+                        document.getElementById('btn-submit').style.display = 'none';
+                        document.getElementById('input-guess').style.display = 'none';
+                        nextBtn.classList.remove('hidden')
+                        feedbackMsg.textContent = 'Congratulations! You guessed the word!';
+                    } else {
+                        if (attempts === {{ max }}) {
+                            updateLetterBoxes(guess, data.exist_indexes, data.correct_indexes, attempts);
+                            feedbackMsg.textContent = 'Incorrect guess. Game over. You did not guess the word.';
+                            document.getElementById('btn-submit').style.display = 'none';
+                            document.getElementById('input-guess').style.display = 'none';
+                        } else {
+                            updateLetterBoxes(guess, data.exist_indexes, data.correct_indexes, attempts);
+                            feedbackMsg.textContent = 'Incorrect guess. Try again!';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    feedbackMsg.textContent = 'An error occurred. Please try again later.';
+                });
+        }
+
+        submitBtn.addEventListener('click', submitGuess);
+    });
+</script>
+</body>
+
+</html>
