@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from config import template, word_data
 from models import User
 
-main_router = APIRouter(prefix='/wordle')
+main_router = APIRouter(prefix='/')
 
 
 @main_router.get('/')

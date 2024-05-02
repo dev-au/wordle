@@ -173,7 +173,7 @@
         const nextBtn = document.querySelector('.next-btn');
 
         refreshBtn.addEventListener('click', function () {
-            fetch('/wordle/restart', {
+            fetch('/restart', {
                 method: 'GET'
             })
                 .then(response => {
@@ -190,7 +190,7 @@
         });
 
         nextBtn.addEventListener('click', function () {
-            fetch('/wordle/next', {
+            fetch('/next', {
                 method: 'GET'
             })
                 .then(response => {
@@ -213,7 +213,7 @@
             document.getElementById('btn-next').classList.remove('hidden')
         }
         if (!({{ attempts }} === 0))
-            fetch('/wordle/attempt', {
+            fetch('/attempt', {
                 method: 'GET',
             })
                 .then(response => response.json())
@@ -253,7 +253,7 @@
                 return;
             }
 
-            fetch('/wordle/attempt', {
+            fetch('/attempt', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
