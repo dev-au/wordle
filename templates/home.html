@@ -210,7 +210,6 @@
         if ({{ max }} === {{ attempts }}) {
             document.getElementById('btn-submit').style.display = 'none';
             document.getElementById('input-guess').style.display = 'none';
-            document.getElementById('btn-next').classList.remove('hidden')
         }
         if (!({{ attempts }} === 0))
             fetch('/attempt', {
